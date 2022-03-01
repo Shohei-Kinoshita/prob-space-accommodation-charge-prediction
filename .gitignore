@@ -143,4 +143,6 @@ submit/
 
 tmp_notebook/
 
+idea_memo/
+
 .DS_Store
