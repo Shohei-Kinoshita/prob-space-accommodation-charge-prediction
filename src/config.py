@@ -20,3 +20,13 @@ DICT_DTYPES = {
     COL_ID: str,
     COL_HOST_ID: str
 }
+
+"""LightGBMのハイパーパラメータ"""
+DICT_PARAMS_LGB = {
+      # TODO: optunaで最適化
+      'task': 'train',
+      'boosting_type': 'gbdt',
+      'objective': 'regression',
+      'metric': 'mean_squared_error',
+      'learning_rate': 0.1
+}
