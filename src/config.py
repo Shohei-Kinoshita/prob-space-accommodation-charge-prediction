@@ -15,6 +15,7 @@ COL_Y = 'y'
 COL_LOG_Y = 'log_y'
 COL_STATION_NAME = 'station_name'
 COL_CLEAN_NAME = 'clean_name'
+COL_ELAPSED_DAYS = 'elapsed_days'
 
 """データ読み込み時の型指定"""
 DICT_DTYPES = {
