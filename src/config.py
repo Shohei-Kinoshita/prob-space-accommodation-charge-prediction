@@ -14,6 +14,7 @@ COL_AVAILABILITY_365 = 'availability_365'
 COL_Y = 'y'
 COL_LOG_Y = 'log_y'
 COL_STATION_NAME = 'station_name'
+COL_CLEAN_NAME = 'clean_name'
 
 """データ読み込み時の型指定"""
 DICT_DTYPES = {
