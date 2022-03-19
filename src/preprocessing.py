@@ -1,3 +1,6 @@
+import re
+from sklearn.preprocessing import LabelEncoder
+
 def label_enc(df, enc_col):
     """リストで指定した列をラベルエンコード"""
     for col in enc_col:
@@ -19,3 +22,13 @@ def nearest_station(df, df_station):
             list_tmp.append(geodesic(coordinate, compare_coordinate).km)
         list_distance.append(list_tmp.index(min(list_tmp)))
     return list_distance
+
+
+def remove_symbol(text):
+    """
+    name列の不要な記号を除去
+    """
+    code_regex = re.compile('[!"#$%&\'\\\\()*+,-./:;<=>?@[\\]^_`{|}~「」〔〕“”〈〉『』【】＆＊・（）＄＃＠。、？！｀＋￥％★✣♪◎☆￫〜◇✋▲△⭐︎丨❤▶☀️※《》☕️✦♯♬♡]')
+    cleaned_text = text.replace(r'wi-fi', 'wifi')  # 記号除去の際の単語分割を防ぐ
+    cleaned_text = code_regex.sub(' ', cleaned_text)
+    return cleaned_text
