@@ -32,3 +32,18 @@ DICT_PARAMS_LGB = {
       'metric': 'mean_squared_error',
       'learning_rate': 0.1
 }
+
+"""モデルに使用する列"""
+LIST_USE_COL = [COL_NEIGHBOURHOOD,
+                COL_LATITUDE,
+                COL_LONGITUDE,
+                COL_ROOM_TYPE,
+                COL_MINIMUM_NIGHTS,
+                COL_NUMBER_OF_REVIEWS,
+                COL_ELAPSED_DAYS,
+                COL_REVIEWS_PER_MONTH,
+                COL_AVAILABILITY_365]
+
+"""エンコードを行う列"""
+LIST_ENC_COL = [COL_NEIGHBOURHOOD,
+                COL_ROOM_TYPE]
