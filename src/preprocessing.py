@@ -1,11 +1,9 @@
 import re
+import datetime
+import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-
-def label_enc(df, enc_col):
-    """リストで指定した列をラベルエンコード"""
-    for col in enc_col:
-        le = LabelEncoder()
-        df[col] = le.transfrom(df[col])
+from geopy.distance import geodesic
+from config import *
 
 
 def nearest_station(df, df_station):
@@ -32,3 +30,25 @@ def remove_symbol(text):
     cleaned_text = text.replace(r'wi-fi', 'wifi')  # 記号除去の際の単語分割を防ぐ
     cleaned_text = code_regex.sub(' ', cleaned_text)
     return cleaned_text
+
+
+def create_elapsed_days(df):
+    """
+    2020/4/30までの経過日数
+    """
+    df[COL_ELAPSED_DAYS] = (datetime.datetime(2020, 4, 30) - df[COL_LAST_REVIEW]).dt.days
+    return df
+
+
+def enc_categorical(df, col_list, method):
+    """
+    カテゴリカル変数に対して、one-hotかlabel-encを行う
+    """
+    if method == 'one-hot':
+        df = pd.get_dummies(df, columns=col_list, drop_first=True)
+        return df
+    elif method == 'label-enc':
+        for col in col_list:
+            le = LabelEncoder()
+            df[col] = le.fit_transform(df[col])
+        return df
