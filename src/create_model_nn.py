@@ -1,12 +1,12 @@
 import sys
 import random
 import os
-import datetime
 import numpy as np
 import pandas as pd
 import warnings
 import gc
 from tqdm import tqdm
+from numpy.ma.core import argsort
 
 import torch
 import torch.nn as nn
@@ -43,11 +43,11 @@ def main():
     args = sys.argv
     model_name = args[1]
     enc_type = args[2]
-    monitoring = args[3]
+    model_save = args[3]
 
     print(f'model_name: {model_name}')
     print(f'enc_type: {enc_type}')
-    print(f'monitoring: {monitoring}')
+    print(f'model_save: {model_save}')
 
     # 乱数シードの固定
     seed_everything(seed=42)
@@ -100,7 +100,8 @@ def main():
     # 学習、検証、モデルの保存
     num_features= X.shape[1]
     kf = KFold(n_splits=NFOLDS, shuffle=True, random_state=0)
-    preds_oof = np.zeros(X.shape[0])
+    preds = []
+    va_idxs = []
     for i, (train_idx, valid_idx) in enumerate(kf.split(X), start=1):
         model = Model(num_features, TARGET_SIZE, HIDDEN_SIZE_1, HIDDEN_SIZE_2)
         model.to(DEVICE)
@@ -116,12 +117,17 @@ def main():
         valid_loader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, num_workers=4, shuffle=False)
 
         for epoch in range(EPOCHS):
+            print(f'epoch: {epoch}')
             train_loss, train_rmsle = train_fn(train_loader, model, criterion, optimizer, DEVICE)
             valid_loss, valid_rmsle, valid_preds = valid_fn(valid_loader, model, criterion, DEVICE)
             print(f'train_loss: {train_loss:.4f}, train_rmsle: {train_rmsle:.4f}')
             print(f'valid_loss: {valid_loss:.4f}, valid_rmsle: {valid_rmsle:.4f}')
+            print('-'*50)
         
-        if monitoring == False:
+        va_idxs.append(valid_idx)
+        preds.append(valid_preds)
+    
+        if model_save == 'True':
             print('='*50)
             print(f'save model: models/{model_name}_fold{i}_.pth')
             print('='*50)
@@ -130,13 +136,20 @@ def main():
         del model, criterion, optimizer
         gc.collect()
 
-    if monitorng == False:
+    preds = np.concatenate(preds)
+    va_idxs = np.concatenate(va_idxs)
+    order = argsort(va_idxs)
+    df_oof = pd.DataFrame(preds[order], columns=[f'{model_name}_stacking'])
+    print('df_oof')
+    print(df_oof.head())
+
+    if model_save == 'True':
         list_preds_tmp = []
         inference_dataset = TestDataset(X_inference)
         inference_loader = DataLoader(inference_dataset, batch_size=BATCH_SIZE, shuffle=False)
         for i in range(1, 6):
-            model = Model(num_features, num_targets, hidden_size_1, hidden_size_2)
-            model.load_state_dict(torch.load(f"models/{model}_fold{i}_.pth"))
+            model = Model(num_features, TARGET_SIZE, HIDDEN_SIZE_1, HIDDEN_SIZE_2)
+            model.load_state_dict(torch.load(f"models/{model_name}_fold{i}_.pth"))
             model.to(DEVICE)
             predictions = inference_fn(model, inference_loader, DEVICE)
             list_preds_tmp.append(predictions)
@@ -150,8 +163,8 @@ def main():
         print(df_preds.head())
         
         # out of foldの予測値を出力(スタッキングの特徴量として使用)
-        # df_oof.to_csv(f'input/train_{model_name}_out_of_fold.csv', index=False)
-        # df_preds[[f'{model_name}_stacking']].to_csv(f'input/test_{model_name}_out_of_fold.csv', index=False)
+        df_oof.to_csv(f'input/train_{model_name}_out_of_fold.csv', index=False)
+        df_preds[[f'{model_name}_stacking']].to_csv(f'input/test_{model_name}_out_of_fold.csv', index=False)
     print('finish')
 
 

@@ -28,11 +28,11 @@ def main():
     args = sys.argv
     model_name = args[1]
     enc_type = args[2]
-    monitoring = args[3]
+    model_save = args[3]
 
     print(f'model_name: {model_name}')
     print(f'enc_type: {enc_type}')
-    print(f'monitoring: {monitoring}')
+    print(f'model_save: {model_save}')
 
     # データの読み込み
     print('read data...')
@@ -80,10 +80,7 @@ def main():
         X = pd.DataFrame(data=scale.transform(X), columns=X.columns)
         X_inference = pd.DataFrame(data=scale.transform(X_inference), columns=X_inference.columns)
 
-    if monitoring:
-        # 学習、検証
-        df_oof = train_predict.fit_for_lgbm(X, y, model_name=model_name, params=DICT_LGBM_PARAMS, verbose=True, model_save=False)
-    else:
+    if model_save == 'True':
         # 学習、検証、モデルの保存
         df_oof = train_predict.fit_for_lgbm(X, y, model_name=model_name, params=DICT_LGBM_PARAMS, verbose=False, model_save=True)
         # 各foldで作成したモデルの予測平均を計算
@@ -92,6 +89,9 @@ def main():
         # out of foldの予測値を出力(スタッキングの特徴量として使用)
         df_oof.to_csv(f'input/train_{model_name}_out_of_fold.csv', index=False)
         df_preds.to_csv(f'input/test_{model_name}_out_of_fold.csv', index=False)
+    else:
+        # 学習、検証
+        df_oof = train_predict.fit_for_lgbm(X, y, model_name=model_name, params=DICT_LGBM_PARAMS, verbose=True, model_save=False)
 
     print('finish')
 
