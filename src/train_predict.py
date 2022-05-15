@@ -3,7 +3,7 @@ import pandas as pd
 import pickle
 import lightgbm as lgb
 from numpy.ma.core import argsort
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
@@ -58,7 +58,7 @@ def fit_for_lgbm(X, y, model_name, params, verbose=True, model_save=True):
     scores = []
     preds = []
     va_idxes = []
-    kf = KFold(n_splits=5, shuffle=True, random_state=0)
+    kf = KFold(n_splits=5)
     for i, (train_idx, valid_idx) in enumerate(kf.split(X), start=1):
         print('='*50)
         print(f'fold: {i}')

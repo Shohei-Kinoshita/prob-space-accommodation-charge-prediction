@@ -44,6 +44,10 @@ def main():
     df_test_station_info = pd.read_csv('input/test_data_distance_from_station.csv', dtype=DICT_DTYPES)
     df_train_name_features = pd.read_csv('input/train_data_name_features.csv')
     df_test_name_features = pd.read_csv('input/test_data_name_features.csv')
+    df_train_gaussian_mixture = pd.read_csv('input/train_data_gaussianmixture.csv')
+    df_test_gaussian_mixture = pd.read_csv('input/test_data_gaussianmixture.csv')
+    df_train_mds = pd.read_csv('input/train_data_mds.csv')
+    df_test_mds = pd.read_csv('input/test_data_mds.csv')
 
     df_all = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
 
@@ -70,11 +74,19 @@ def main():
 
     # 使用する特徴量を全て結合
     X = df_all[:df_train.shape[0]].reset_index(drop=True)
-    X = pd.concat([X, df_train_distance_features, df_train_name_features], axis=1)
+    X = pd.concat([X,
+                   df_train_distance_features,
+                   df_train_name_features,
+                   df_train_gaussian_mixture,
+                   df_train_mds], axis=1)
     y = np.log1p(df_train[COL_Y])
 
     X_inference = df_all[df_train.shape[0]:].reset_index(drop=True)
-    X_inference = pd.concat([X_inference, df_test_distance_features, df_test_name_features], axis=1)
+    X_inference = pd.concat([X_inference,
+                             df_test_distance_features,
+                             df_test_name_features,
+                             df_test_gaussian_mixture,
+                             df_test_mds], axis=1)
 
     if enc_type == 'one-hot':
         scale = StandardScaler()

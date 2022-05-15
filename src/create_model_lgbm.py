@@ -8,6 +8,9 @@ from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+from sklearn.ensemble import RandomForestRegressor
 
 from config import *
 import preprocessing as pr
@@ -21,6 +24,7 @@ DICT_LGBM_PARAMS = {
     'metric': 'None',
     "verbosity": -1,
     "boosting_type": "gbdt",
+    "seed": 42
 }
 
 
@@ -42,16 +46,26 @@ def main():
     df_test_station_info = pd.read_csv('input/test_data_distance_from_station.csv', dtype=DICT_DTYPES)
     df_train_name_features = pd.read_csv('input/train_data_name_features.csv')
     df_test_name_features = pd.read_csv('input/test_data_name_features.csv')
+    df_train_gaussian_mixture = pd.read_csv('input/train_data_gaussianmixture.csv')
+    df_test_gaussian_mixture = pd.read_csv('input/test_data_gaussianmixture.csv')
+    df_train_mds = pd.read_csv('input/train_data_mds.csv')
+    df_test_mds = pd.read_csv('input/test_data_mds.csv')
+    df_train_nearest_station = pd.read_csv('input/train_data_station_info.csv', usecols=['nearest_station_index'])
+    df_test_nearest_station = pd.read_csv('input/test_data_station_info.csv', usecols=['nearest_station_index'])
+    df_train_neighbourhood_roomtype = pd.read_csv('input/train_data_neighbourhood_roomtype.csv', usecols=['neighbourhood_roomtype_le'])
+    df_test_neighbourhood_roomtype = pd.read_csv('input/test_data_neighbourhood_roomtype.csv', usecols=['neighbourhood_roomtype_le'])
 
     df_all = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
 
     # 2020/4/30までの経過日数列を追加
     df_all = pr.create_elapsed_days(df_all)
-    df_all.fillna(0, inplace=True)
-
     df_all = df_all[LIST_USE_COL]
     # エンコードタイプ(one-hot,label-enc)に合わせてエンコード
     df_all = pr.enc_categorical(df_all, LIST_ENC_COL, enc_type)
+
+    # モデル(rf)による欠損値補完
+    print('Missing complement...')
+    df_all.fillna(0, inplace=True)
 
     # 各駅までの距離(km)を10次元に次元削減
     df_all_station_info = pd.concat([df_train_station_info, df_test_station_info], axis=0).reset_index(drop=True)
@@ -68,11 +82,23 @@ def main():
 
     # 使用する特徴量を全て結合
     X = df_all[:df_train.shape[0]].reset_index(drop=True)
-    X = pd.concat([X, df_train_distance_features, df_train_name_features], axis=1)
+    X = pd.concat([X,
+                   df_train_distance_features,
+                   df_train_name_features,
+                   df_train_gaussian_mixture,
+                   df_train_mds,
+                   df_train_nearest_station,
+                   df_train_neighbourhood_roomtype], axis=1)
     y = np.log1p(df_train[COL_Y])
 
     X_inference = df_all[df_train.shape[0]:].reset_index(drop=True)
-    X_inference = pd.concat([X_inference, df_test_distance_features, df_test_name_features], axis=1)
+    X_inference = pd.concat([X_inference,
+                             df_test_distance_features,
+                             df_test_name_features,
+                             df_test_gaussian_mixture,
+                             df_test_mds,
+                             df_test_nearest_station,
+                             df_test_neighbourhood_roomtype], axis=1)
 
     if enc_type == 'one-hot':
         scale = StandardScaler()
